@@ -41,7 +41,7 @@ export class FinancialService {
       
       const summaryRaw = await this.executeWithTimeout(
         yf.quoteSummary(cleanSymbol, {
-          modules: ['financialData', 'defaultKeyStatistics', 'summaryDetail', 'incomeStatementHistory'],
+          modules: ['financialData', 'defaultKeyStatistics', 'summaryDetail'],
         })
       );
 
@@ -53,12 +53,10 @@ export class FinancialService {
       const financialData = (summaryRaw as any).financialData || {};
       const defaultKeyStatistics = (summaryRaw as any).defaultKeyStatistics || {};
       const summaryDetail = (summaryRaw as any).summaryDetail || {};
-      const incomeStatementHistory = (summaryRaw as any).incomeStatementHistory?.incomeStatementHistory || [];
-      const primaryStatement = incomeStatementHistory[0] || {};
 
-      const revenue = val(primaryStatement.totalRevenue) || val(financialData.totalRevenue) || 0;
-      const netIncome = val(primaryStatement.netIncome) || 0;
-      const grossProfit = val(primaryStatement.grossProfit) || 0;
+      const revenue = val(financialData.totalRevenue) || 0;
+      const netIncome = val(defaultKeyStatistics.netIncomeToCommon) || 0;
+      const grossProfit = val(financialData.grossProfits) || 0;
 
       // Yahoo Finance returns fractional values for margins, growth, and returns, multiply by 100 for percentages
       const revenueGrowth = +(val(financialData.revenueGrowth) * 100).toFixed(2);

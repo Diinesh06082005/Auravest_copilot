@@ -99,26 +99,24 @@ export class StockService {
     try {
       logger.info(`[StockService] Fetching yahooFinance quotes and summary stats for: "${cleanSymbol}"`);
 
-      // 1. Fetch current quote
-      const quoteRaw = await this.executeWithTimeout(yf.quote(cleanSymbol));
-      
-      // 2. Fetch key stats summary
-      const summaryRaw = await this.executeWithTimeout(
-        yf.quoteSummary(cleanSymbol, {
-          modules: ['defaultKeyStatistics', 'summaryDetail'],
-        })
-      );
-
-      // 3. Fetch 1 year historical charts
+      // Fetch quote, key stats summary, and 1 year historical charts in parallel
       const oneYearAgo = new Date();
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      
-      const chartResult = await this.executeWithTimeout(
-        yf.chart(cleanSymbol, {
-          period1: oneYearAgo.toISOString().split('T')[0],
-          interval: '1d',
-        })
-      );
+
+      const [quoteRaw, summaryRaw, chartResult] = await Promise.all([
+        this.executeWithTimeout(yf.quote(cleanSymbol)),
+        this.executeWithTimeout(
+          yf.quoteSummary(cleanSymbol, {
+            modules: ['defaultKeyStatistics', 'summaryDetail'],
+          })
+        ),
+        this.executeWithTimeout(
+          yf.chart(cleanSymbol, {
+            period1: oneYearAgo.toISOString().split('T')[0],
+            interval: '1d',
+          })
+        )
+      ]);
       const historicalRaw = (chartResult as any).quotes || [];
 
       // Validate quote

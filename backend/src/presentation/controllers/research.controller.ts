@@ -3,6 +3,7 @@ import { Research } from '../../data/models/research.model';
 import { pdfService } from '../../business/services/pdf/pdf.service';
 import { runInvestmentResearch, investmentGraph } from '../../ai';
 import { logger } from '../../shared/logger';
+import { appleMockReport } from '../../ai/mockReport.js';
 
 /**
  * Triggers the LangGraph research report workflow, persists results, and returns them
@@ -33,7 +34,6 @@ export const compileReport = async (req: Request, res: Response, next: NextFunct
     // Seed logic if it is AAPL and user has no report
     if (!reportDoc && cleanCompany === 'AAPL') {
       logger.info(`[ResearchController] Pre-seeding default AAPL mock report for user: ${userId}`);
-      const { appleMockReport } = await import('../../ai/mockReport');
       reportDoc = await Research.create({
         userId,
         ticker: 'AAPL',
@@ -165,7 +165,6 @@ export const compileReport = async (req: Request, res: Response, next: NextFunct
         const isQuota = finalState.errors.some((e: string) => e.includes('QUOTA_EXCEEDED') || e.includes('429'));
         if (company.toUpperCase() === 'AAPL' || isQuota) {
           logger.warn('[ResearchController] Injecting Apple Mock Dashboard payload due to failure or rate limits.');
-          const { appleMockReport } = await import('../../ai/mockReport');
           
           reportDoc = await Research.create({
             userId,
@@ -223,7 +222,6 @@ export const compileReport = async (req: Request, res: Response, next: NextFunct
       // If quota issues or requesting Apple, failover to the built-in Apple mock report
       if (company.toUpperCase() === 'AAPL' || isQuota) {
         logger.warn('[ResearchController] Injecting Apple Mock payload for synchronous fallback due to errors or quota.');
-        const { appleMockReport } = await import('../../ai/mockReport');
 
         reportDoc = await Research.create({
           userId,

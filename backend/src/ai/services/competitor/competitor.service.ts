@@ -43,48 +43,70 @@ export class CompetitorService {
       }
 
       // De-duplicate and select 3 to 5 peers
-      const uniquePeers = Array.from(new Set(peersList)).slice(0, 5);
+      const uniquePeers = Array.from(new Set(peersList)).slice(0, 5) as string[];
       
-      const peerPromises = uniquePeers.map(async (peerSymbol) => {
-        if (typeof peerSymbol !== 'string') return null;
-        
-        try {
-          logger.info(`[CompetitorService] Resolving details for peer: "${peerSymbol}"`);
+      const peerQuotesMap: Record<string, any> = {};
+      const nonCachedPeers: string[] = [];
 
-          const quoteCacheKey = `yf_quote_${peerSymbol}`;
-          let quote: any = apiCache.get(quoteCacheKey);
-          
-          if (!quote) {
-            quote = await yahooFinance.quote(peerSymbol);
-            apiCache.set(quoteCacheKey, quote);
-          }
-          
-          if (!quote) return null;
-
-          return {
-            name: quote.shortName || quote.longName || peerSymbol,
-            symbol: peerSymbol,
-            industry: industry || 'Unknown',
-            sector: sector || 'Unknown',
-            marketCap: quote.marketCap || 0,
-            revenue: 0, // Yahoo quote doesn't include TTM revenue directly
-            netIncome: 0, // Yahoo quote doesn't include net income
-            peRatio: quote.trailingPE || quote.forwardPE || 0,
-            revenueGrowth: 0,
-            eps: quote.epsTrailingTwelveMonths || quote.epsForward || 0,
-            roe: 0,
-            employees: 0,
-            headquarters: 'Unknown',
-            website: 'Unknown'
-          };
-        } catch (err: any) {
-          logger.warn(`[CompetitorService] Failed to retrieve data for peer "${peerSymbol}": ${err.message}`);
-          return null;
+      for (const peerSymbol of uniquePeers) {
+        if (typeof peerSymbol !== 'string') continue;
+        const quoteCacheKey = `yf_quote_${peerSymbol}`;
+        const cachedQuote = apiCache.get(quoteCacheKey);
+        if (cachedQuote) {
+          peerQuotesMap[peerSymbol] = cachedQuote;
+        } else {
+          nonCachedPeers.push(peerSymbol);
         }
-      });
+      }
 
-      const resolvedPeers = await Promise.all(peerPromises);
-      const competitorBenchmarks = resolvedPeers.filter((p): p is CompetitorBenchmark => p !== null);
+      if (nonCachedPeers.length > 0) {
+        try {
+          logger.info(`[CompetitorService] Bulk fetching quotes for peers: ${nonCachedPeers.join(', ')}`);
+          const bulkQuotes = await yahooFinance.quote(nonCachedPeers);
+          const quotesArray = Array.isArray(bulkQuotes) ? bulkQuotes : [bulkQuotes];
+          for (const q of quotesArray) {
+            if (q && q.symbol) {
+              apiCache.set(`yf_quote_${q.symbol}`, q);
+              peerQuotesMap[q.symbol] = q;
+            }
+          }
+        } catch (err: any) {
+          logger.warn(`[CompetitorService] Bulk peer quote fetch failed: ${err.message}. Retrying individually...`);
+          for (const peerSymbol of nonCachedPeers) {
+            try {
+              const q = await yahooFinance.quote(peerSymbol);
+              if (q) {
+                apiCache.set(`yf_quote_${peerSymbol}`, q);
+                peerQuotesMap[peerSymbol] = q;
+              }
+            } catch (singleErr: any) {
+              logger.warn(`[CompetitorService] Individual fetch failed for ${peerSymbol}: ${singleErr.message}`);
+            }
+          }
+        }
+      }
+
+      const competitorBenchmarks: CompetitorBenchmark[] = [];
+      for (const peerSymbol of uniquePeers) {
+        const quote = peerQuotesMap[peerSymbol];
+        if (!quote) continue;
+        competitorBenchmarks.push({
+          name: quote.shortName || quote.longName || peerSymbol,
+          symbol: peerSymbol,
+          industry: industry || 'Unknown',
+          sector: sector || 'Unknown',
+          marketCap: quote.marketCap || 0,
+          revenue: 0,
+          netIncome: 0,
+          peRatio: quote.trailingPE || quote.forwardPE || 0,
+          revenueGrowth: 0,
+          eps: quote.epsTrailingTwelveMonths || quote.epsForward || 0,
+          roe: 0,
+          employees: 0,
+          headquarters: 'Unknown',
+          website: 'Unknown'
+        });
+      }
 
       return competitorBenchmarks;
 

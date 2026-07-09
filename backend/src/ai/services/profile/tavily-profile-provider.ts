@@ -77,20 +77,21 @@ export class TavilyProfileProvider implements ICompanyProfileProvider {
     try {
       logger.info(`[TavilyProfileProvider] Fetching profile metrics for: "${cleanSymbol}"`);
 
-      // 1. Fetch raw market cap & exchange from Yahoo Finance
-      const summaryDetail = await this.executeWithTimeout(
-        yf.quoteSummary(cleanSymbol, { modules: ['summaryDetail', 'defaultKeyStatistics'] })
-      ).catch((err) => {
-        logger.warn(`[TavilyProfileProvider] Yahoo quoteSummary failed for "${cleanSymbol}": ${err.message}`);
-        return null;
-      });
+      // 1. Fetch raw market cap & exchange from Yahoo Finance AND perform Tavily Search in parallel
+      const tavilyQuery = `${cleanSymbol} company profile corporate facts CEO founder employees headquarters industry sector website description`;
+      
+      const [summaryDetail, searchResults] = await Promise.all([
+        this.executeWithTimeout(
+          yf.quoteSummary(cleanSymbol, { modules: ['summaryDetail', 'defaultKeyStatistics'] })
+        ).catch((err) => {
+          logger.warn(`[TavilyProfileProvider] Yahoo quoteSummary failed for "${cleanSymbol}": ${err.message}`);
+          return null;
+        }),
+        tavilyService.search(tavilyQuery, 4)
+      ]);
 
       const marketCap = (summaryDetail as any)?.summaryDetail?.marketCap || (summaryDetail as any)?.defaultKeyStatistics?.marketCap || 0;
       const rawMarketCap = typeof marketCap === 'object' && 'raw' in marketCap ? marketCap.raw : marketCap;
-
-      // 2. Perform Tavily Search to gather recent profile, management, and business description info
-      const tavilyQuery = `${cleanSymbol} company profile corporate facts CEO founder employees headquarters industry sector website description`;
-      const searchResults = await tavilyService.search(tavilyQuery, 4);
       const context = searchResults.map(r => `Source: ${r.title}\nContent: ${r.content}`).join('\n\n');
 
       // 3. Prompt Gemini to extract and structure the profile data

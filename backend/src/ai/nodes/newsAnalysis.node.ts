@@ -38,31 +38,29 @@ export async function newsAnalysisNode(state: GraphState): Promise<Partial<Graph
     };
   } catch (error: any) {
     logger.warn(`newsAnalysisNode: Query failed for "${searchSubject}" (${error.message}). Injecting mock news.`);
-    // Return empty but valid news structures so report generation works
     return {
       news: [
         {
           title: `${searchSubject} announces new product offerings and strategic partnerships`,
-          snippet: `${searchSubject} is expanding its market share through key product enhancements and strategic integrations.`,
+          summary: `${searchSubject} is expanding its market share through key product enhancements and strategic integrations.`,
           url: 'https://finance.yahoo.com',
           source: 'Yahoo Finance',
-          publishedDate: new Date().toISOString(),
+          publishedAt: new Date().toISOString(),
           sentiment: 'positive',
-          impactScore: 78,
-          relevance: 'high',
+          category: 'Partnership',
         }
       ],
       newsStatistics: {
-        totalArticles: 1,
-        averageSentimentScore: 78,
-        positiveCount: 1,
-        neutralCount: 0,
-        negativeCount: 0,
-        recentCount: 1,
+        newsCount: 1,
+        positiveArticleCount: 1,
+        negativeArticleCount: 0,
+        neutralArticleCount: 0,
+        averageRecencyHours: 1,
+        sourceDiversityScore: 100,
       },
-      newsCategories: [
-        { category: 'Company Growth', count: 1 }
-      ],
+      newsCategories: {
+        'Partnership': 1
+      },
       errors: [],
     };
   }
