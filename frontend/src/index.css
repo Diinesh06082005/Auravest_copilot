@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-slate-950 dark:text-slate-50 antialiased;
+  }
+}
+
+@layer components {
+  /* Premium Glassmorphism Card Style */
+  .glass-card {
+    @apply bg-white/70 dark:bg-[#0B0F19]/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/40 shadow-sm transition-all duration-300;
+  }
+}
+
+/* Custom Scrollbar Styles for Clean UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.2);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.15);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.2) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(148, 163, 184, 0.15) transparent;
+}
+
+/* ==========================================
+   PREMIUM GLASSMORPHISM SYSTEM
+   ========================================== */
+
+/* Background gradient styling for glass theme */
+html.glass body {
+  background: radial-gradient(circle at 5% 5%, #151833 0%, #080A11 50%, #030408 100%) !important;
+  color: #f8fafc !important;
+}
+
+/* Glass-theme specific glow blurs */
+html.glass .glass-blob-1 {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%) !important;
+  animation: float-blob-1 25s infinite alternate ease-in-out !important;
+  opacity: 1 !important;
+}
+
+html.glass .glass-blob-2 {
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%) !important;
+  animation: float-blob-2 30s infinite alternate ease-in-out !important;
+  opacity: 1 !important;
+}
+
+html.glass .glass-blob-3 {
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, transparent 70%) !important;
+  animation: float-blob-3 22s infinite alternate ease-in-out !important;
+  opacity: 0.8 !important;
+}
+
+@keyframes float-blob-1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(12%, 18%) scale(1.2); }
+  100% { transform: translate(-8%, -8%) scale(0.9); }
+}
+
+@keyframes float-blob-2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-15%, 10%) scale(0.85); }
+  100% { transform: translate(10%, -15%) scale(1.15); }
+}
+
+@keyframes float-blob-3 {
+  0% { transform: translate(0, 0) scale(0.9); }
+  50% { transform: translate(18%, -12%) scale(1.25); }
+  100% { transform: translate(-10%, 15%) scale(0.95); }
+}
+
+/* Card Overrides for high transparency & blur */
+html.glass .glass-card,
+html.glass .bg-white\/70,
+html.glass .dark\:bg-slate-905\/75,
+html.glass .bg-slate-50\/50,
+html.glass .dark\:bg-slate-950\/50,
+html.glass .rounded-2xl.border.border-slate-200\/80.bg-white\/70.p-6.shadow-sm,
+html.glass .rounded-2xl.border.border-slate-200\/80.bg-white\/70.p-6.shadow-sm.backdrop-blur-md {
+  background: rgba(10, 15, 28, 0.45) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Hover effect on glass cards */
+html.glass .glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 15px 45px 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Sidebar overriding */
+html.glass aside {
+  background: rgba(8, 10, 20, 0.55) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Navbar/Header overriding */
+html.glass header {
+  background: rgba(8, 10, 20, 0.55) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Dashboard Hero Section */
+html.glass #overview {
+  background: rgba(10, 15, 28, 0.55) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Inputs styling */
+html.glass input {
+  background: rgba(8, 10, 20, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(12px) !important;
+  color: #ffffff !important;
+}
+html.glass input:focus {
+  border-color: rgba(99, 102, 241, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* Buttons styling */
+html.glass button.bg-blue-650,
+html.glass button[type="submit"] {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.75), rgba(59, 130, 246, 0.75)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+html.glass button.bg-blue-650:hover,
+html.glass button[type="submit"]:hover {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.9), rgba(59, 130, 246, 0.9)) !important;
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5) !important;
+  transform: translateY(-1px);
+}
