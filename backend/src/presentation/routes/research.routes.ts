@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth.middleware';
-import { compileReport, getReports, getReportById, exportReportPdf } from '../controllers/research.controller';
+import { compileReport, getReports, getReportById, exportReportPdf, getCompanyYoutubeVideos } from '../controllers/research.controller';
 
 const router = Router();
 
@@ -11,6 +11,7 @@ router.use(authenticate);
 router.post('/', compileReport);
 router.get('/stream', compileReport);  // SSE streaming endpoint: GET /api/research/stream?company=AAPL
 router.get('/reports', getReports);    // renamed to avoid conflict with stream route
+router.get('/youtube', getCompanyYoutubeVideos);
 router.get('/:id', getReportById);
 router.get('/:id/export', exportReportPdf);
 

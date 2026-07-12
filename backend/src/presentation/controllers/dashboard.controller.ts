@@ -3,6 +3,7 @@ import { Watchlist } from '../../data/models/watchlist.model';
 import { Portfolio } from '../../data/models/portfolio.model';
 import { Settings } from '../../data/models/settings.model';
 import { yFinanceService } from '../../data/services/yfinance.service';
+import { newsService } from '../../data/services/news.service';
 import { logger } from '../../shared/logger';
 
 /**
@@ -167,6 +168,25 @@ export const removeWatchlistTicker = async (req: Request, res: Response, next: N
     });
   } catch (error) {
     logger.error('Error removing ticker from watchlist:', error);
+    next(error);
+  }
+};
+
+/**
+ * Resolves news articles for a specific stock ticker
+ */
+export const getNewsForTicker = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ticker = (req.query.ticker as string) || 'AAPL';
+    const news = await newsService.getNews(ticker, 8);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        news,
+      },
+    });
+  } catch (error) {
+    logger.error('Error fetching ticker news:', error);
     next(error);
   }
 };

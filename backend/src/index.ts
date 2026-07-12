@@ -12,6 +12,7 @@ import { logger } from './shared/logger';
 import { configurePassport } from './shared/config/passport';
 import { mainRouter } from './presentation/routes';
 import { verifyServices } from './shared/utils/verifyServices';
+import { User } from './data/models/user.model';
 
 // Configure Passport.js OAuth Strategies
 configurePassport();
@@ -109,6 +110,22 @@ async function bootstrap() {
   try {
     // Validate required integrations and connect database
     await verifyServices();
+    
+    // Seed default demo user if not exists
+    const demoEmail = 'demo@auravest.com';
+    const demoUser = await User.findOne({ email: demoEmail });
+    if (!demoUser) {
+      logger.info(`🌱 Seeding default demo user: ${demoEmail}`);
+      await User.create({
+        name: 'Demo User',
+        email: demoEmail,
+        password: 'demopassword',
+        role: 'user',
+      });
+      logger.info('✅ Demo user seeded successfully.');
+    } else {
+      logger.info('ℹ️ Demo user already exists.');
+    }
     
     server = app.listen(config.port, () => {
       logger.info(`⚡ Server running in ${config.nodeEnv} mode on port ${config.port}`);

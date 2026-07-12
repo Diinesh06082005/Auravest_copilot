@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { 
   ArrowUpRight, ArrowDownRight, CheckCircle, Circle, Play, Send, 
   TrendingUp, Activity, Sparkles, Star, Plus, ShieldAlert, 
-  HelpCircle, ChevronRight, Newspaper, Calendar, DollarSign, AlertCircle, X
+  HelpCircle, ChevronRight, Newspaper, Calendar, DollarSign, AlertCircle, X,
+  PlayCircle
 } from 'lucide-react';
 import { useAuthStore } from '../../../business/store/auth.store';
 import { Watchlist } from '../../components/dashboard/Watchlist';
@@ -204,6 +205,7 @@ const COMPANIES: Record<string, CompanyData> = {
 };
 
 import { useResearchStore, InvestmentReport } from '../../../business/store/research.store';
+import { apiClient } from '../../../data/api/client';
 
 const formatCurrency = (val: number) => {
   if (!val) return 'N/A';
@@ -478,6 +480,72 @@ const getActiveStepIndex = (node: string): number => {
   }
 };
 
+function LoadingGraphAnimation({ symbol }: { symbol: string }) {
+  const [points, setPoints] = useState<number[]>([40, 45, 42, 48, 46, 52, 50, 58, 55, 62]);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPoints(prev => {
+        const last = prev[prev.length - 1];
+        const next = Math.max(15, Math.min(85, last + (Math.random() * 12 - 6)));
+        return [...prev.slice(1), next];
+      });
+    }, 850);
+    return () => clearInterval(interval);
+  }, []);
+
+  const pathD = points.map((p, idx) => {
+    const x = (idx / (points.length - 1)) * 300;
+    const y = 80 - p;
+    return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`;
+  }).join(' ');
+
+  const fillD = `${pathD} L 300 80 L 0 80 Z`;
+
+  return (
+    <div className="rounded-xl border border-slate-200/20 dark:border-slate-800/30 bg-slate-50/5 dark:bg-slate-950/20 p-3.5 mb-5 relative overflow-hidden">
+      <div className="flex items-center justify-between z-10 text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+        <span className="flex items-center gap-1">
+          <Activity className="h-3 w-3 text-emerald-500 animate-pulse" />
+          {symbol.toUpperCase()} Live Technical Vector Stream
+        </span>
+        <span className="text-emerald-500 animate-pulse">
+          Simulating charts...
+        </span>
+      </div>
+
+      <div className="h-16 w-full relative">
+        <svg className="w-full h-full" viewBox="0 0 300 80" preserveAspectRatio="none">
+          <line x1="0" y1="20" x2="300" y2="20" stroke="currentColor" className="text-slate-100 dark:text-slate-900" strokeWidth="0.5" strokeDasharray="3 3" />
+          <line x1="0" y1="40" x2="300" y2="40" stroke="currentColor" className="text-slate-100 dark:text-slate-900" strokeWidth="0.5" strokeDasharray="3 3" />
+          <line x1="0" y1="60" x2="300" y2="60" stroke="currentColor" className="text-slate-100 dark:text-slate-900" strokeWidth="0.5" strokeDasharray="3 3" />
+
+          <path d={fillD} fill="url(#loading-graph-grad)" opacity="0.15" className="transition-all duration-700 ease-out" />
+          <path d={pathD} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-700 ease-out" />
+          
+          {points.length > 0 && (
+            <circle
+              cx="300"
+              cy={80 - points[points.length - 1]}
+              r="3.5"
+              fill="#10b981"
+              className="animate-ping"
+              style={{ transformOrigin: `300px ${80 - points[points.length - 1]}px` }}
+            />
+          )}
+
+          <defs>
+            <linearGradient id="loading-graph-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 function InteractiveLoader({ ticker }: { ticker: string }) {
   const { progressNode, progressMessage } = useResearchStore();
   const [timeLeft, setTimeLeft] = useState(45);
@@ -516,6 +584,24 @@ function InteractiveLoader({ ticker }: { ticker: string }) {
   }, [ticker]);
 
   const activeIndex = getActiveStepIndex(progressNode || 'start');
+  const [newsArticles, setNewsArticles] = useState<any[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      setNewsLoading(true);
+      try {
+        const res = await apiClient.get(`/api/dashboard/news?ticker=${ticker}`);
+        setNewsArticles(res.data.data.news || []);
+      } catch (err) {
+        console.error('Failed to load loading news:', err);
+      } finally {
+        setNewsLoading(false);
+      }
+    };
+    fetchNews();
+  }, [ticker]);
+
   const radius = 48;
   const stroke = 5;
   const normalizedRadius = radius - stroke * 2;
@@ -633,81 +719,62 @@ function InteractiveLoader({ ticker }: { ticker: string }) {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Live Market Dynamics & Stock Simulators */}
+        {/* RIGHT COLUMN: Live Market News Feed */}
         <div className="md:col-span-6 glass-card rounded-2xl p-6 flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.03)] z-0">
           <div>
             <div className="flex justify-between items-center mb-6">
               <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 tracking-wider uppercase bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-md border border-slate-200/50 dark:border-slate-850 flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                Live Market Simulator
+                <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                Live Stock Intelligence Feed
               </span>
               <span className="text-[10px] font-bold text-blue-650 dark:text-blue-400 uppercase tracking-widest">
-                Real-Time Feeds
+                Market Insights
               </span>
             </div>
 
-            <div className="space-y-4">
-              {/* Target Stock Chart */}
-              <LiveStockChart 
-                symbol={ticker.toUpperCase()} 
-                name={COMPANIES[ticker.toUpperCase()]?.name || `${ticker.toUpperCase()} Inc.`} 
-                basePrice={COMPANIES[ticker.toUpperCase()]?.price || 150.00} 
-                baseChange={COMPANIES[ticker.toUpperCase()]?.changePercent || 0.85} 
-              />
+            {/* Neon Streaming Stock Chart Animation */}
+            <LoadingGraphAnimation symbol={ticker} />
 
-              {/* NVDA */}
-              <LiveStockChart 
-                symbol="NVDA" 
-                name="NVIDIA Corporation" 
-                basePrice={875.12} 
-                baseChange={3.45} 
-              />
-
-              {/* TSLA */}
-              <LiveStockChart 
-                symbol="TSLA" 
-                name="Tesla Inc." 
-                basePrice={177.40} 
-                baseChange={-2.26} 
-              />
-            </div>
-          </div>
-
-          {/* Live Order Book / Trade Ledger */}
-          <div className="mt-8 border-t border-slate-200/50 dark:border-slate-900 pt-6">
-            <h4 className="text-[10.5px] font-black tracking-wider text-slate-400 dark:text-slate-500 uppercase mb-3 flex items-center gap-1.5">
-              <Activity className="h-3.5 w-3.5 text-blue-500 animate-pulse" />
-              Live Simulated Execution Ledger
-            </h4>
-            <div className="space-y-2 h-[150px] overflow-hidden relative">
-              {trades.map((trade) => (
-                <motion.div
-                  key={trade.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center justify-between text-[11px] font-semibold bg-slate-50/50 dark:bg-slate-900/20 px-3 py-2 rounded-xl border border-slate-200/30 dark:border-slate-800/30"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                      trade.type === 'BUY' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
-                    }`}>
-                      {trade.type}
-                    </span>
-                    <span className="text-slate-800 dark:text-slate-200 font-bold">{trade.symbol}</span>
+            {/* News Articles List */}
+            {newsLoading ? (
+              <div className="flex flex-col items-center justify-center py-24 text-slate-555 dark:text-slate-400">
+                <div className="h-7 w-7 animate-spin border-2 border-blue-600 border-t-transparent rounded-full" />
+                <p className="mt-3 text-[10px] font-bold tracking-wide">Aggregating recent stock articles...</p>
+              </div>
+            ) : newsArticles.length === 0 ? (
+              <div className="text-center py-24 text-xs text-slate-500 font-semibold">
+                No recent news articles resolved for {ticker.toUpperCase()}.
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1">
+                {newsArticles.map((art, idx) => (
+                  <div key={idx} className="rounded-xl border border-slate-200/40 dark:border-slate-800/30 bg-slate-50/20 dark:bg-slate-900/10 p-3.5 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 transition duration-150">
+                    <div className="flex justify-between items-start gap-3">
+                      <span className="text-[9px] font-black text-blue-650 dark:text-blue-400 uppercase tracking-wider">
+                        {art.source}
+                      </span>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-500">
+                        {new Date(art.publishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                    <h4 className="font-extrabold text-xs text-slate-900 dark:text-white mt-1.5 line-clamp-1 leading-snug">
+                      {art.title}
+                    </h4>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-450 mt-1 line-clamp-2 leading-relaxed">
+                      {art.description}
+                    </p>
+                    <a
+                      href={art.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2.5 inline-flex items-center gap-1 text-[9.5px] font-black text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Read full article <ChevronRight className="h-3 w-3" />
+                    </a>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-slate-500 dark:text-slate-400">{trade.size} shares</span>
-                    <span className="text-slate-800 dark:text-white font-bold">
-                      ${trade.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                    <span className="text-[9.5px] text-slate-400 dark:text-slate-650">{trade.time}</span>
-                  </div>
-                </motion.div>
-              ))}
-              {/* Fade overlay at bottom */}
-              <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-slate-50/50 dark:from-slate-950/50 to-transparent pointer-events-none" />
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -722,7 +789,73 @@ export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState('Overview');
   const [chatInput, setChatInput] = useState('');
   
-  const data = currentResearch ? mapReportToDashboardData(currentResearch) : null;
+  const [ytVideos, setYtVideos] = useState<any[]>([]);
+  const [selectedVideoId, setSelectedVideoId] = useState<string>('');
+  const [ytLoading, setYtLoading] = useState(false);
+  
+  let data = currentResearch ? mapReportToDashboardData(currentResearch) : null;
+
+  if (!data && currentCompany) {
+    const upperCompany = currentCompany.toUpperCase();
+    if (COMPANIES[upperCompany]) {
+      data = COMPANIES[upperCompany];
+    } else {
+      data = {
+        name: `${upperCompany} Corp.`,
+        ticker: upperCompany,
+        exchange: 'US EQUITY',
+        industry: 'Technology',
+        description: 'A technology company specializing in software and innovation.',
+        logo: upperCompany.substring(0, 2),
+        price: 150.0,
+        change: 0.0,
+        changePercent: 0.0,
+        marketCap: '$100.0B',
+        range52w: '$100.00 - $200.00',
+        divYield: '0.00%',
+        nextEarnings: 'TBD',
+        confidence: 50,
+        rec: 'HOLD',
+        recSub: 'Neutral',
+        metrics: {
+          revenue: { value: '$10.0B', yoy: '+0.0%', trend: [50, 50, 50, 50, 50, 50] },
+          profit: { value: '$1.0B', yoy: '+0.0%', trend: [50, 50, 50, 50, 50, 50] },
+          fcf: { value: '$800.0M', yoy: '+0.0%', trend: [50, 50, 50, 50, 50, 50] },
+          roe: { value: '15.0%', yoy: '+0.0%', trend: [50, 50, 50, 50, 50, 50] },
+          debtToEquity: { value: '0.50', risk: 'Low Risk', trend: [50, 50, 50, 50, 50, 50] },
+          peRatio: { value: '25.0', rating: 'Moderate', trend: [50, 50, 50, 50, 50, 50] },
+          eps: { value: '$2.50', yoy: '+0.0%', trend: [50, 50, 50, 50, 50, 50] },
+        },
+        radarPoints: "150,110 190,130 170,165 150,190 120,160 130,120",
+        radarScores: [
+          { label: 'Profitability', score: 5.0 },
+          { label: 'Growth', score: 5.0 },
+          { label: 'Cash Flow', score: 5.0 },
+          { label: 'Management', score: 5.0 },
+          { label: 'Efficiency', score: 5.0 },
+          { label: 'Solvency', score: 5.0 },
+        ],
+        risk: {
+          overall: 50,
+          market: 'Moderate Risk',
+          financial: 'Low Risk',
+          competition: 'Medium Risk',
+          regulatory: 'Low Risk',
+          technology: 'Low Risk',
+        },
+        reasoning: ['Initial data loading or graph compilation failed. Showing placeholder values.'],
+        swot: {
+          strengths: ['Established market presence'],
+          weaknesses: ['Vulnerable to technology shifts'],
+          opportunities: ['Emerging digital market expansion'],
+          threats: ['Macroeconomic headwinds'],
+        },
+        stockHistory: [150, 150, 150, 150, 150, 150],
+        news: [],
+        allocation: COMPANIES.AAPL.allocation,
+      };
+    }
+  }
 
   // Hash scroll listener
   useEffect(() => {
@@ -838,6 +971,43 @@ export default function DashboardPage() {
       startResearch('AAPL');
     }
   }, [currentResearch, loading, startResearch]);
+
+  // Fetch YouTube stock analysis video details
+  useEffect(() => {
+    if (!data?.ticker) return;
+    const fetchYtVideos = async () => {
+      setYtLoading(true);
+      try {
+        const res = await apiClient.get(`/api/research/youtube?ticker=${data.ticker}`);
+        const vids = res.data.data.videos || [];
+        setYtVideos(vids);
+        if (vids.length > 0) {
+          setSelectedVideoId(vids[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load YouTube videos:', err);
+      } finally {
+        setYtLoading(false);
+      }
+    };
+    fetchYtVideos();
+  }, [data?.ticker]);
+
+  // Scroll to top of the page when loading completes or new data loads
+  useEffect(() => {
+    if (!loading && data) {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+
+      const timer = setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, data?.ticker]);
 
   if (!data) {
     const store = useResearchStore.getState();
@@ -1369,6 +1539,8 @@ export default function DashboardPage() {
             </div>
           </div>
 
+
+
           {/* 9. LATEST AI NEWS TIMELINE */}
           <div id="news" className="glass-card rounded-2xl p-5 scroll-mt-20">
             <div className="flex justify-between items-center mb-4">
@@ -1427,49 +1599,88 @@ export default function DashboardPage() {
         {/* RIGHT ANALYST TIMELINE COLUMN (3 cols) */}
         <div className="lg:col-span-3 space-y-6">
           
-          {/* 12. AI RESEARCH TIMELINE */}
-          <div id="history" className="glass-card rounded-2xl p-5 scroll-mt-20">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xs font-black tracking-widest text-slate-500 uppercase">AI Research Timeline</h3>
-              <button 
-                onClick={() => startResearch(data.ticker)} 
-                disabled={runningTimeline}
-                className="text-[9px] font-black text-blue-650 dark:text-blue-400 flex items-center gap-1 hover:underline disabled:opacity-40"
-              >
-                <Play className="h-2.5 w-2.5" /> Re-Run
-              </button>
+          {/* 12. YOUTUBE VIDEO INTELLIGENCE */}
+          <div id="history" className="glass-card rounded-2xl p-4.5 scroll-mt-20">
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <h3 className="text-xs font-black tracking-wider text-slate-700 dark:text-slate-350 flex items-center gap-1.5 uppercase">
+                  <PlayCircle className="h-4 w-4 text-red-500 animate-pulse" />
+                  Video Insights
+                </h3>
+                <p className="text-[9px] text-slate-500 font-semibold mt-0.5">
+                  Market analysis & expert reviews
+                </p>
+              </div>
             </div>
 
-            {/* Steps timeline vertical */}
-            <div className="space-y-4 relative pl-3.5 border-l border-slate-200 dark:border-slate-850">
-              {timelineSteps.map((step, idx) => {
-                const isDone = idx < activeStep;
-                const isActive = idx === activeStep;
-                
-                return (
-                  <div key={idx} className="relative">
-                    {/* Bullet marker */}
-                    <div className="absolute -left-[20.5px] top-1">
-                      {isDone ? (
-                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500 bg-slate-50 dark:bg-slate-950 rounded-full" />
-                      ) : isActive ? (
-                        <div className="h-3.5 w-3.5 rounded-full border border-blue-500 bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-                          <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-ping" />
-                        </div>
-                      ) : (
-                        <Circle className="h-3.5 w-3.5 text-slate-300 dark:text-slate-800 bg-slate-50 dark:bg-slate-950" />
-                      )}
-                    </div>
-
-                    <div className="pl-2">
-                      <span className={`text-[10px] font-extrabold ${isActive ? 'text-blue-600 dark:text-blue-400 font-black' : isDone ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-600'}`}>
-                        {step.label}
-                      </span>
-                      <p className="text-[9px] text-slate-500 mt-0.5">{step.desc}</p>
-                    </div>
+            <div className="space-y-3.5">
+              {/* Primary Video Embed */}
+              <div className="rounded-xl overflow-hidden border border-slate-205 dark:border-slate-900 bg-black aspect-video relative shadow-inner">
+                {selectedVideoId ? (
+                  <iframe
+                    className="w-full h-full"
+                    src={`https://www.youtube.com/embed/${selectedVideoId}`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  ></iframe>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-slate-505 text-[10px] font-semibold">
+                    Select a video to play
                   </div>
-                );
-              })}
+                )}
+              </div>
+
+              {/* Video Recommendations List */}
+              <div className="flex flex-col">
+                {ytLoading ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-slate-500">
+                    <div className="h-5 w-5 animate-spin border-2 border-red-500 border-t-transparent rounded-full" />
+                    <p className="mt-1.5 text-[9px] font-bold">Querying YouTube feeds...</p>
+                  </div>
+                ) : ytVideos.length === 0 ? (
+                  <div className="text-center py-6 text-[10px] text-slate-500 font-semibold">
+                    No matching videos found.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                    {ytVideos.map((video) => {
+                      const isActive = selectedVideoId === video.id;
+                      return (
+                        <button
+                          key={video.id}
+                          onClick={() => setSelectedVideoId(video.id)}
+                          className={`w-full text-left flex gap-2.5 p-1.5 rounded-xl border transition-all duration-150 ${
+                            isActive
+                              ? 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400'
+                              : 'bg-slate-50/50 dark:bg-slate-900/10 border-slate-200/50 dark:border-slate-800/40 hover:bg-slate-100/50 dark:hover:bg-slate-900/30 text-slate-800 dark:text-slate-250'
+                          }`}
+                        >
+                          <div className="w-16 aspect-video rounded bg-slate-100 dark:bg-slate-900 shrink-0 overflow-hidden relative flex items-center justify-center border border-slate-200/50 dark:border-slate-800/30">
+                            <img
+                              src={`https://img.youtube.com/vi/${video.id}/mqdefault.jpg`}
+                              alt="thumbnail"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                              <Play className="h-3.5 w-3.5 text-white drop-shadow-md" />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <h4 className="font-extrabold text-[10px] line-clamp-2 leading-tight">
+                              {video.title}
+                            </h4>
+                            <span className="text-[8px] text-slate-400 dark:text-slate-500 mt-0.5 font-bold block truncate">
+                              {video.channel}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

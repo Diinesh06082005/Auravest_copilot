@@ -253,3 +253,44 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     next(error);
   }
 };
+
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req.user as any)?._id;
+    const { name, password } = req.body;
+
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        statusCode: 404,
+        message: 'User not found.',
+      });
+    }
+
+    if (name) {
+      user.name = name;
+    }
+    if (password) {
+      user.password = password;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.avatar,
+        },
+      },
+    });
+  } catch (error) {
+    logger.error('Error updating user profile:', error);
+    next(error);
+  }
+};

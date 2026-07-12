@@ -22,6 +22,7 @@ interface AuthState {
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
+  updateProfile: (name?: string, password?: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -132,4 +133,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearError: () => set({ error: null }),
+  updateProfile: async (name, password) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await apiClient.put('/api/auth/me', { name, password });
+      const { user } = response.data.data;
+      set((state) => ({
+        user: state.user ? { ...state.user, name: user.name } : null,
+        isLoading: false,
+      }));
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || err.message || 'Profile update failed.';
+      set({ error: errMsg, isLoading: false });
+      throw err;
+    }
+  },
 }));

@@ -27,8 +27,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { to: '/#news', label: 'Market News', icon: Newspaper },
     { to: '/#ai-insights', label: 'AI Insights', icon: BrainCircuit },
     { to: '/#analytics', label: 'Analytics', icon: LineChart },
-    { to: '/#history', label: 'Search History', icon: History },
-    { to: '/#export', label: 'Export Reports', icon: Download },
+    { to: '/history', label: 'Search History', icon: History },
+    { to: '/export', label: 'Export Reports', icon: Download },
     { to: '/settings', label: 'Profile', icon: User },
     { to: '/settings', label: 'Settings', icon: Settings },
   ];
@@ -61,12 +61,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="flex h-16 items-center justify-between px-6 border-b border-slate-200/85 dark:border-slate-800/45">
           <div className="flex items-center gap-2.5">
             {/* Hexagonal AI Icon */}
-            <div className="h-8 w-8 rounded-lg bg-blue-650 flex items-center justify-center text-white font-black text-sm shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-              Æ
+            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-xs shadow-[0_0_15px_rgba(37,99,235,0.5)]">
+              AV
             </div>
             <div className="flex flex-col">
-              <span className="font-black text-xs tracking-wider text-slate-850 dark:text-white uppercase leading-none">AI Investment</span>
-              <span className="text-[10px] text-slate-400 font-bold dark:text-blue-400 mt-0.5">Research Copilot</span>
+              <span className="font-black text-xs tracking-wider text-blue-600 dark:text-blue-400 uppercase leading-none" style={{ textShadow: '0 0 10px rgba(59,130,246,0.6)' }}>AuraVest</span>
+              <span className="text-[9px] text-slate-400 font-bold dark:text-blue-500/80 mt-0.5 uppercase tracking-widest">Research Copilot</span>
             </div>
           </div>
           <button
@@ -90,7 +90,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold tracking-wide transition-all ${
                   isLinkActive(to, isActive)
-                    ? 'bg-blue-50/70 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'
+                    ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.55)] dark:bg-blue-600 dark:text-white dark:shadow-[0_0_15px_rgba(59,130,246,0.5)]'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-850 dark:text-slate-400 dark:hover:bg-slate-900/60 dark:hover:text-slate-200'
                 }`
               }

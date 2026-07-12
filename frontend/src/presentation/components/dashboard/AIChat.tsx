@@ -19,9 +19,9 @@ export function AIChat() {
     },
   ]);
 
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const presetChips = [
     'Explain NVDA catalysts',
@@ -29,9 +29,11 @@ export function AIChat() {
     'How to improve Sharpe ratio?',
   ];
 
-  // Auto scroll to bottom
+  // Auto scroll messages container to bottom internally
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -109,7 +111,7 @@ As an investment assistant, I recommend checking the **Factor Profile** and adju
       </div>
 
       {/* Messages Window */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((msg) => {
           const isAI = msg.sender === 'ai';
           return (
@@ -170,7 +172,6 @@ As an investment assistant, I recommend checking the **Factor Profile** and adju
           </div>
         )}
 
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Preset Chip suggestions */}

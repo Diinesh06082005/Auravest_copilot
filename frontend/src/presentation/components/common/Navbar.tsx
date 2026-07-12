@@ -9,6 +9,7 @@ import { useAuthStore } from '../../../business/store/auth.store';
 import { useResearchStore } from '../../../business/store/research.store';
 import { useNavigate } from 'react-router-dom';
 import { useResearchReportsQuery } from '../../../business/hooks/useResearch';
+import { DynamicIsland } from './DynamicIsland';
 
 interface NavbarProps {
   onMenuOpen: () => void;
@@ -148,16 +149,16 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
       item.category.toLowerCase().includes(q)
     );
 
-    // Add "Run workflow" dynamic option if it looks like a ticker
-    const isTickerLike = /^[A-Za-z0-9.]{1,6}$/.test(q);
+    // Add "Run workflow" dynamic option if it looks like a ticker or search name
+    const isTickerLike = q.trim().length > 0 && q.trim().length <= 16;
     const workflowItem = isTickerLike ? [{
       id: 'run-workflow-dynamic',
-      label: `Run AI Research Workflow for "${q.toUpperCase()}"`,
+      label: `Run AI Research Workflow for "${q.trim().toUpperCase()}"`,
       category: 'AI Workflows',
       icon: Brain,
       action: () => {
-        startResearch(q.toUpperCase());
-        saveRecentSearch(q.toUpperCase());
+        startResearch(q.trim().toUpperCase());
+        saveRecentSearch(q.trim().toUpperCase());
         navigate('/');
         setIsCommandPaletteOpen(false);
       }
@@ -174,14 +175,20 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
   const handlePaletteKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev + 1) % paletteItems.length);
+      setSelectedIndex(prev => (prev + 1) % (paletteItems.length || 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev - 1 + paletteItems.length) % paletteItems.length);
+      setSelectedIndex(prev => (prev - 1 + (paletteItems.length || 1)) % (paletteItems.length || 1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (paletteItems[selectedIndex]) {
         paletteItems[selectedIndex].action();
+      } else if (commandQuery.trim()) {
+        const q = commandQuery.trim().toUpperCase();
+        startResearch(q);
+        saveRecentSearch(q);
+        navigate('/');
+        setIsCommandPaletteOpen(false);
       }
     } else if (e.key === 'Escape') {
       e.preventDefault();
@@ -191,7 +198,8 @@ export function Navbar({ onMenuOpen }: NavbarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full h-16 flex items-center justify-between px-6 bg-white/80 dark:bg-[#0B0F19]/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/40 text-slate-900 dark:text-white transition-all duration-300">
+      <header className="sticky top-0 z-40 w-full h-16 flex items-center justify-between px-6 bg-white/80 dark:bg-[#0B0F19]/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/40 text-slate-900 dark:text-white transition-all duration-300 relative">
+        <DynamicIsland />
         <div className="flex items-center gap-4 flex-1 max-w-md">
           {/* Hamburger Menu for Mobile */}
           <button

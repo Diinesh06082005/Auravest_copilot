@@ -60,7 +60,7 @@ export class PdfService {
         doc.fillColor('#0F172A')
            .fontSize(16)
            .font('Helvetica-Bold')
-           .text('EquiShare', 85, 42);
+           .text('AuraVest', 85, 42);
         doc.fillColor('#2563EB')
            .fontSize(16)
            .font('Helvetica-Bold')
@@ -253,7 +253,7 @@ export class PdfService {
         doc.fillColor('#94A3B8')
            .fontSize(7)
            .font('Helvetica')
-           .text('EquiShare Copilot Financial Intelligence Report. Standard A4 Export. Proprietary insights.', 50, 755);
+           .text('AuraVest Copilot Financial Intelligence Report. Standard A4 Export. Proprietary insights.', 50, 755);
         doc.text('Page 1 of 2', 495, 755, { align: 'right' });
 
 
@@ -266,7 +266,7 @@ export class PdfService {
         doc.fillColor('#0F172A')
            .fontSize(9.5)
            .font('Helvetica-Bold')
-           .text(`EquiShare Investment Copilot  |  Report on ${data.ticker}`, 50, 40);
+           .text(`AuraVest Investment Copilot  |  Report on ${data.ticker}`, 50, 40);
 
         doc.moveTo(50, 52)
            .lineTo(545, 52)

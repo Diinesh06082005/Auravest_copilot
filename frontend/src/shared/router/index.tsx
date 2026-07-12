@@ -11,6 +11,8 @@ const DashboardPage = lazy(() => import('../../presentation/pages/dashboard'));
 const ResearchPage = lazy(() => import('../../presentation/pages/research'));
 const PortfolioPage = lazy(() => import('../../presentation/pages/portfolio'));
 const SettingsPage = lazy(() => import('../../presentation/pages/settings'));
+const HistoryPage = lazy(() => import('../../presentation/pages/history'));
+const ExportPage = lazy(() => import('../../presentation/pages/export'));
 const LoginPage = lazy(() => import('../../presentation/pages/auth'));
 const RegisterPage = lazy(() => import('../../presentation/pages/auth/register'));
 
@@ -79,6 +81,22 @@ export const router = createBrowserRouter([
             element: (
               <Suspense fallback={<LoadingScreen />}>
                 <SettingsPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: '/history',
+            element: (
+              <Suspense fallback={<LoadingScreen />}>
+                <HistoryPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: '/export',
+            element: (
+              <Suspense fallback={<LoadingScreen />}>
+                <ExportPage />
               </Suspense>
             ),
           },

@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import passport from 'passport';
-import { refreshSession, logout, register, login } from '../controllers/auth.controller';
+import { refreshSession, logout, register, login, updateProfile } from '../controllers/auth.controller';
 import { googleAuthCallback } from '../controllers/google-auth.controller';
 import { authenticate } from '../middlewares/auth.middleware';
-
+ 
 export const authRouter = Router();
-
+ 
 authRouter.post('/register', register);
 authRouter.post('/login', login);
 authRouter.post('/refresh', refreshSession);
 authRouter.post('/logout', logout);
+authRouter.put('/me', authenticate, updateProfile);
 
 // Google OAuth Authorization Trigger Route
 authRouter.get(
