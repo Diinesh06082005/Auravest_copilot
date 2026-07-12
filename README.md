@@ -4,14 +4,17 @@ AuraVest is a state-of-the-art AI Investment Research Copilot designed to automa
 
 ---
 
-# 📂 Assignment Submission Details & Zip Link
+# 📂 Assignment Submission Details & Live Links
 
-Submission Zip Link: Insert Publicly Accessible Link Here (e.g., Google Drive,
-OneDrive, or Dropbox Link)
+GitHub Repository: https://github.com/Diinesh06082005/Auravest_copilot.git
+
+Frontend Production Live Site: https://frontend-three-rho-0fga1y0u5g.vercel.app
+
+Backend Production API URL: https://auravest-backend-d9xp.onrender.com
 
 This submission folder contains the complete, verified codebase including the
 backend services, frontend dashboard interface, Mongoose models, asset
-compilers, and this README document detailing the architectural approach.
+compilers, and separate README documents detailing the architectural approach.
 
 Instructions to Zip & Submit the Assignment: To package this assignment, select
 both the backend and frontend folders along with the configurations, right-click
