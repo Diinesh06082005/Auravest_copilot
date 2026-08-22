@@ -6,7 +6,7 @@ export class InvestmentScoreValidator {
    * Validates score breakdown bounds, types, and properties.
    */
   public validate(scoreBreakdown: ScoreBreakdown): boolean {
-    const keys: (keyof Omit<ScoreBreakdown, 'overallScore' | 'grade'>)[] = [
+    const keys: (keyof Omit<ScoreBreakdown, 'overallScore' | 'grade' | 'mlPrediction'>)[] = [
       'financialHealth',
       'growth',
       'profitability',

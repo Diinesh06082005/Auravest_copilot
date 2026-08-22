@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0-Auravest-FinQuant",
+  "trainedAt": "2026-08-22T06:19:52.242Z",
+  "sampleCount": 3000,
+  "weights": {
+    "pe": -0.0832,
+    "pb": 0.1176,
+    "debt": -7.2598,
+    "margin": 78.0816,
+    "growth": 67.3443,
+    "beta": -7.7932,
+    "sentiment": 14.3113,
+    "bias": 57.9438
+  },
+  "classificationThresholds": {
+    "APlus": 82,
+    "A": 70,
+    "B": 55,
+    "C": 40
+  }
+}

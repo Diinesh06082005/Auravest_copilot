@@ -3,6 +3,7 @@ import { ScoreBreakdown } from '../../types';
 import { logger } from '../../../shared/logger';
 import { InvestmentScoreValidator } from './investmentScore.validator';
 import * as utils from './investmentScore.utils';
+import { customModelService } from '../customModel.service';
 
 export class InvestmentScoreService {
   private readonly validator = new InvestmentScoreValidator();
@@ -25,6 +26,16 @@ export class InvestmentScoreService {
     const risk = utils.calculateRisk(state);
     const management = utils.calculateManagement(state);
     const innovation = utils.calculateInnovation(state);
+
+    // Run Custom ML Model Inference
+    const mlPrediction = customModelService.predict({
+      peRatio: state.financials?.peRatio || 20,
+      debtToEquity: state.financials?.debtToEquity || 1.2,
+      profitMargin: state.financials?.operatingMargin || 0.15,
+      revenueGrowth: state.financials?.revenueGrowth || 0.10,
+      beta: state.stock?.beta || 1.1,
+    });
+    logger.info(`[CustomMLModel] Inference output for "${company}": Score=${mlPrediction.predictedQuantScore}, Grade=${mlPrediction.financialGrade}, BankruptcyProb=${mlPrediction.bankruptcyProbability}%`);
 
     // 2. Weighted overall score calculation
     const weightedSum = 
@@ -55,6 +66,7 @@ export class InvestmentScoreService {
       innovation,
       overallScore,
       grade,
+      mlPrediction,
     };
 
     // 3. Validation check

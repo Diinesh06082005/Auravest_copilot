@@ -252,6 +252,14 @@ export interface ScoreBreakdown {
   innovation: ScoreDetail;
   overallScore: number;
   grade: string;
+  mlPrediction?: {
+    modelName: string;
+    version: string;
+    predictedQuantScore: number;
+    financialGrade: string;
+    bankruptcyProbability: number;
+    keyModelDrivers: string[];
+  };
 }
 
 export interface InvestmentReport {

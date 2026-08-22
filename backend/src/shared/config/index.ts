@@ -34,6 +34,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().min(1, { message: 'CORS_ORIGIN/CLIENT_URL is required' }),
   TAVILY_API_KEY: z.string().min(1, { message: 'TAVILY_API_KEY is required' }),
   NEWS_API_KEY: z.string().optional().default(''),
+  GROK_API_KEY: z.string().optional().default(''),
   LANGCHAIN_API_KEY: z.string().optional(),
   LANGCHAIN_TRACING_V2: z.string().optional(),
 });
@@ -90,6 +91,9 @@ export const config = {
   },
   tavily: {
     apiKey: env.TAVILY_API_KEY,
+  },
+  grok: {
+    apiKey: env.GROK_API_KEY || process.env.XAI_API_KEY || '',
   },
   langsmith: {
     apiKey: env.LANGCHAIN_API_KEY,

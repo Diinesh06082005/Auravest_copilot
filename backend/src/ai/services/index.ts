@@ -1,5 +1,6 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { getLatestSupportedModelSync, getLatestSupportedModel, blacklistModel, isModelUnavailableError, geminiKeyRotator } from '../config';
+import { config } from '../../shared/config';
 
 let apiKeyStored: string | null = null;
 let currentModelName: string | null = null;
@@ -17,7 +18,8 @@ function createGeminiClientProxy(): ChatGoogleGenerativeAI {
       if (prop === 'invoke') {
         return async function (this: any, ...args: any[]) {
           let attempts = 0;
-          const maxAttempts = 6; // 3 keys x 2 attempts each
+          const totalKeys = config.gemini.apiKeys ? config.gemini.apiKeys.length : 1;
+          const maxAttempts = Math.max(6, totalKeys * 3); // 3 attempts per key minimum
           while (attempts < maxAttempts) {
             attempts++;
             try {
@@ -34,6 +36,7 @@ function createGeminiClientProxy(): ChatGoogleGenerativeAI {
               if (isQuota && apiKeyStored) {
                 geminiKeyRotator.markQuotaExceeded(apiKeyStored);
                 apiKeyStored = null; // force re-init next iteration
+                await new Promise((r) => setTimeout(r, 1000));
                 continue;
               }
               if (isModelUnavailableError(err) && attempts < maxAttempts && apiKeyStored && currentModelName) {

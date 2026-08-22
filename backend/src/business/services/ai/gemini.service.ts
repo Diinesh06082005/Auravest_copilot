@@ -2,6 +2,7 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 import { config } from '../../../shared/config';
 import { logger } from '../../../shared/logger';
 import { getLatestSupportedModel, blacklistModel, isModelUnavailableError, geminiKeyRotator } from '../../../ai/config';
+import { grokService } from './grok.service';
 
 export class GeminiService {
   /**
@@ -16,11 +17,12 @@ export class GeminiService {
   /**
    * Executes an async operation with retries + key rotation on quota errors.
    */
-  private async executeWithRetry<T>(fn: (ai: GoogleGenerativeAI) => Promise<T>, retries = 3, delay = 800): Promise<T> {
+  private async executeWithRetry<T>(fn: (ai: GoogleGenerativeAI) => Promise<T>, retries?: number, delay = 1000): Promise<T> {
+    const totalRetries = retries !== undefined ? retries : Math.max(6, (config.gemini.apiKeys ? config.gemini.apiKeys.length : 1) * 2);
     let currentKey = geminiKeyRotator.getNextKey();
     let ai = new GoogleGenerativeAI(currentKey);
 
-    for (let attempt = 0; attempt <= retries; attempt++) {
+    for (let attempt = 0; attempt <= totalRetries; attempt++) {
       try {
         return await fn(ai);
       } catch (error: any) {
@@ -30,18 +32,19 @@ export class GeminiService {
         if (isQuota) {
           // Mark this key as exhausted and rotate to next
           geminiKeyRotator.markQuotaExceeded(currentKey);
-          if (attempt < retries) {
+          if (attempt < totalRetries) {
             currentKey = geminiKeyRotator.getNextKey();
             ai = new GoogleGenerativeAI(currentKey);
-            logger.warn(`[GeminiService] Quota hit. Rotating to next key. Attempt ${attempt + 1}/${retries}.`);
+            logger.warn(`[GeminiService] Quota hit. Rotating to next key. Attempt ${attempt + 1}/${totalRetries}.`);
+            await new Promise((r) => setTimeout(r, delay));
             continue;
           }
           throw new Error('QUOTA_EXCEEDED');
         }
 
-        if (isTransient && attempt < retries) {
+        if (isTransient && attempt < totalRetries) {
           const backoff = delay * Math.pow(2, attempt);
-          logger.warn(`[GeminiService] Transient error. Retrying in ${backoff}ms... (attempt ${attempt + 1}/${retries})`);
+          logger.warn(`[GeminiService] Transient error. Retrying in ${backoff}ms... (attempt ${attempt + 1}/${totalRetries})`);
           await new Promise((r) => setTimeout(r, backoff));
           continue;
         }
@@ -104,9 +107,18 @@ export class GeminiService {
           blacklistModel(resolvedModelName);
           resolvedModelName = await getLatestSupportedModel(config.gemini.apiKey);
         } else {
+          if (grokService.isConfigured()) {
+            logger.warn(`[GeminiService] Gemini calls failed (${error.message}). Attempting automatic fallback to Grok API...`);
+            return await grokService.generateText(prompt, { temperature });
+          }
           throw error;
         }
       }
+    }
+
+    if (grokService.isConfigured()) {
+      logger.warn('[GeminiService] All Gemini model attempts failed. Falling back to Grok API...');
+      return await grokService.generateText(prompt, { temperature });
     }
 
     throw new Error('[GeminiService] generateText failed after all model fallbacks.');
